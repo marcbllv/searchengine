@@ -227,6 +227,7 @@ public class PageRank{
         for(int i = 0 ; i < numberOfDocs ; i++) {
             count[i] = 0;
         }
+        int pageCount = 0;
 
         Double[] p = new Double[numberOfDocs];
         for(int i = 0 ; i < numberOfDocs ; i++) {
@@ -240,6 +241,7 @@ public class PageRank{
                 // Starting random walk from page
                 int page = start;
                 count[page]++;
+                pageCount++;
 
                 // Iterate while not bored
                 while(r.nextDouble() > 1 - c) {
@@ -250,21 +252,22 @@ public class PageRank{
                     Double rateJump;
 
                     if((outlinks = this.link.get(page)) == null) {
-                        // No outlinks so jump randomly
-                        page = r.nextInt(numberOfDocs);
+                        // Dangling node: end this walk
+                        break;
                     } else {
                         // Choose amoung random outlinks
                         reachable = this.link.get(page).keySet().toArray(reachable);
                         page = reachable[r.nextInt(reachable.length)];
                     }
                     count[page]++;
+                    pageCount++;
                 }
             }
         }
 
         // Normalization
         for(int i = 0 ; i < numberOfDocs ; i++) {
-            p[i] = (double)(count[i]) * (1 - c) / (double)N;
+            p[i] = (double)(count[i]) / (double)pageCount;
         }
 
         // Sorting & displaying results
@@ -272,7 +275,7 @@ public class PageRank{
         Integer[] idx = comp.createIndexArray();
         Arrays.sort(idx, comp);
 
-        for(int i = 1 ; i <= 25 ; i++) {
+        for(int i = 1 ; i <= 50 ; i++) {
             System.out.println(i + ": " + docName[idx[numberOfDocs - i]] + " " + p[idx[numberOfDocs - i]]);
         }
     }

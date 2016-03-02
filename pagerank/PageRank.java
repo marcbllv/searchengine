@@ -220,11 +220,12 @@ public class PageRank{
         // Random walk parameters
         int m = 100;
         int N = m * numberOfDocs;
+        double c = 1 - PageRank.BORED;
        
         // Various counters for PR computation
-        int[] ending = new int[numberOfDocs];
+        int[] count = new int[numberOfDocs];
         for(int i = 0 ; i < numberOfDocs ; i++) {
-            ending[i] = 0;
+            count[i] = 0;
         }
 
         Double[] p = new Double[numberOfDocs];
@@ -238,9 +239,10 @@ public class PageRank{
             for(int n = 0 ; n < m ; n++) {
                 // Starting random walk from page
                 int page = start;
+                count[page]++;
 
                 // Iterate while not bored
-                while(r.nextDouble() > PageRank.BORED) {
+                while(r.nextDouble() > 1 - c) {
 
                     Integer[] reachable = new Integer[0];
                     Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
@@ -255,14 +257,14 @@ public class PageRank{
                         reachable = this.link.get(page).keySet().toArray(reachable);
                         page = reachable[r.nextInt(reachable.length)];
                     }
+                    count[page]++;
                 }
-                ending[page]++;
             }
         }
 
         // Normalization
         for(int i = 0 ; i < numberOfDocs ; i++) {
-            p[i] = (double)(ending[i]) / (double)N;
+            p[i] = (double)(count[i]) * (1 - c) / (double)N;
         }
 
         // Sorting & displaying results

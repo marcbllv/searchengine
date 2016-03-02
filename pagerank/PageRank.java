@@ -218,8 +218,7 @@ public class PageRank{
 
     void monteCarloPagerank( int numberOfDocs ) {
         // Random walk parameters
-        int m = 62;
-        int N = m * numberOfDocs;
+        int N = 100 * numberOfDocs;
        
         // Various counters for PR computation
         int[] count  = new int[numberOfDocs];

@@ -218,8 +218,7 @@ public class PageRank{
 
     void monteCarloPagerank( int numberOfDocs ) {
         // Random walk parameters
-        int m = 100;
-        int N = m * numberOfDocs;
+        int N = 100 * numberOfDocs;
         double c = 1 - PageRank.BORED;
        
         // Various counters for PR computation
@@ -236,32 +235,30 @@ public class PageRank{
 
         Random r = new Random();
 
-        for(int start = 0 ; start < numberOfDocs ; start++) {
-            for(int n = 0 ; n < m ; n++) {
-                // Starting random walk from page
-                int page = start;
+        for(int n = 0 ; n < N ; n++) {
+            // Starting random walk from page
+            int page = r.nextInt(numberOfDocs);
+            count[page]++;
+            pageCount++;
+
+            // Iterate while not bored
+            while(r.nextDouble() > 1 - c) {
+
+                Integer[] reachable = new Integer[0];
+                Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
+                int any;
+                Double rateJump;
+
+                if((outlinks = this.link.get(page)) == null) {
+                    // Dangling node: end this walk
+                    break;
+                } else {
+                    // Choose amoung random outlinks
+                    reachable = this.link.get(page).keySet().toArray(reachable);
+                    page = reachable[r.nextInt(reachable.length)];
+                }
                 count[page]++;
                 pageCount++;
-
-                // Iterate while not bored
-                while(r.nextDouble() > 1 - c) {
-
-                    Integer[] reachable = new Integer[0];
-                    Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
-                    int any;
-                    Double rateJump;
-
-                    if((outlinks = this.link.get(page)) == null) {
-                        // Dangling node: end this walk
-                        break;
-                    } else {
-                        // Choose amoung random outlinks
-                        reachable = this.link.get(page).keySet().toArray(reachable);
-                        page = reachable[r.nextInt(reachable.length)];
-                    }
-                    count[page]++;
-                    pageCount++;
-                }
             }
         }
 

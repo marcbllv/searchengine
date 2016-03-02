@@ -218,13 +218,12 @@ public class PageRank{
 
     void monteCarloPagerank( int numberOfDocs ) {
         // Random walk parameters
-        int N = 100 * numberOfDocs;
+        int m = 100;
+        int N = m * numberOfDocs;
        
         // Various counters for PR computation
-        int[] count  = new int[numberOfDocs];
         int[] ending = new int[numberOfDocs];
         for(int i = 0 ; i < numberOfDocs ; i++) {
-            count[i]  = 0;
             ending[i] = 0;
         }
 
@@ -235,32 +234,30 @@ public class PageRank{
 
         Random r = new Random();
 
-        for(int n = 0 ; n < N ; n++) {
-            // Starting random walk
-            // First: choose a page to start from
-            int page = r.nextInt(numberOfDocs);
-            count[page]++;
+        for(int start = 0 ; start < numberOfDocs ; start++) {
+            for(int n = 0 ; n < m ; n++) {
+                // Starting random walk from page
+                int page = start;
 
-            // Then: iterate while not bored
-            while(r.nextDouble() > PageRank.BORED) {
+                // Iterate while not bored
+                while(r.nextDouble() > PageRank.BORED) {
 
-                Integer[] reachable = new Integer[0];
-                Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
-                int any;
-                Double rateJump;
+                    Integer[] reachable = new Integer[0];
+                    Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
+                    int any;
+                    Double rateJump;
 
-                if((outlinks = this.link.get(page)) == null) {
-                    // No outlinks so jump randomly
-                    page = r.nextInt(numberOfDocs);
-                } else {
-                    // Choose amoung random outlinks
-                    reachable = this.link.get(page).keySet().toArray(reachable);
-                    page = reachable[r.nextInt(reachable.length)];
+                    if((outlinks = this.link.get(page)) == null) {
+                        // No outlinks so jump randomly
+                        page = r.nextInt(numberOfDocs);
+                    } else {
+                        // Choose amoung random outlinks
+                        reachable = this.link.get(page).keySet().toArray(reachable);
+                        page = reachable[r.nextInt(reachable.length)];
+                    }
                 }
-
-                count[page]++;
+                ending[page]++;
             }
-            ending[page]++;
         }
 
         // Normalization

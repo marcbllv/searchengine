@@ -1,0 +1,15 @@
+Notes: 
+
+Some inexistant documents in the list: Candidate_Statements, document_translated, MattHh  
+
+I graded all the graduate programs with score at least 1. If they contain some mathematics, they get a score of 2, and if mathematics is the main topic they get 3.
+
+I wasn't really sure about Private_tutoring: it's not a program at all, but still a way to learn some mathematics so I put 1 as it describes a bit of the query.
+
+Documents like University_departments or teacher pages are useful to get contact information on graduate programs and maths, but this is not a graduate program description. So these one were tricky to me. I put 1 for them mostly as they contain valuable information but this information is very spare in these documents.
+
+------------
+
+Precision = 61%
+Recall = 14%
+(14 relevant documents over 23)

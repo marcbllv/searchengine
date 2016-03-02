@@ -67,17 +67,18 @@ public class PageRank{
      */
     final static int MAX_NUMBER_OF_ITERATIONS = 1000;
 
-    /**
-     * The probability of each ndoe
-     */
-    Double[] p;
-
     /* --------------------------------------------- */
 
 
     public PageRank( String filename ) {
         int noOfDocs = readDocs( filename );
-        computePagerank( noOfDocs );
+        boolean montecarlo = true;
+
+        if(montecarlo) {
+            monteCarloPagerank(noOfDocs);
+        } else { 
+            computePagerank( noOfDocs );
+        }
     }
 
 
@@ -180,7 +181,7 @@ public class PageRank{
                 
                 for(int j = 0 ; j < numberOfDocs ; j++) {
                     if(this.link.get(j) == null) {
-                        p[i] += c * pPrev[j] / (numberOfDocs - 1);
+                        p[i] += c * pPrev[j] / numberOfDocs;
                     } else {
                         if(this.link.get(j).get(i) != null) {
                             p[i] += c * pPrev[j] / this.out[j];
@@ -192,12 +193,11 @@ public class PageRank{
             }
 
             // Test convergence
-            double s = 0.0, test = 0.0;
+            double s = 0.0;
             for(int i = 0 ; i < numberOfDocs ; i++) {
                 s += (p[i] - pPrev[i]) * (p[i] - pPrev[i]);
-                test += p[i];
             }
-            System.out.println(": " + s + " | test: " + test);
+            System.out.println(": " + s);
 
             if(s < PageRank.EPSILON * PageRank.EPSILON) {
                 break;
@@ -218,39 +218,32 @@ public class PageRank{
 
     void monteCarloPagerank( int numberOfDocs ) {
         // Random walk parameters
-        int N_WALKS = 1000000;
+        int m = 62;
+        int N = m * numberOfDocs;
        
-        // Various counters
-        Double[] count  = new Double[numberOfDocs];
-        Double[] ending = new Double[numberOfDocs];
+        // Various counters for PR computation
+        int[] count  = new int[numberOfDocs];
+        int[] ending = new int[numberOfDocs];
         for(int i = 0 ; i < numberOfDocs ; i++) {
-            count[i]  = 0.0;
-            ending[i] = 0.0;
+            count[i]  = 0;
+            ending[i] = 0;
         }
 
-        p = new Double[numberOfDocs];
-        Double[] prevP = new Double[numberOfDocs];
+        Double[] p = new Double[numberOfDocs];
         for(int i = 0 ; i < numberOfDocs ; i++) {
             p[i] = 0.0;
         }
 
         Random r = new Random();
-        boolean converged = false;
 
-        for(int n = 0 ; n < PageRank.MAX_NUMBER_OF_ITERATIONS ; n++) {
-
-            System.arraycopy(p, 0, prevP, 0, numberOfDocs);
-            Integer k;
-
+        for(int n = 0 ; n < N ; n++) {
             // Starting random walk
-            // First: choose a random page to start from
+            // First: choose a page to start from
             int page = r.nextInt(numberOfDocs);
-            // Then: iterate
-            for(int i = 0 ; i < N_WALKS; i++) {
-                // If bored: stop random walk
-                if(r.nextDouble() < PageRank.BORED) {
-                    break;
-                }
+            count[page]++;
+
+            // Then: iterate while not bored
+            while(r.nextDouble() > PageRank.BORED) {
 
                 Integer[] reachable = new Integer[0];
                 Hashtable<Integer, Boolean> outlinks = new Hashtable<Integer, Boolean>();
@@ -268,34 +261,21 @@ public class PageRank{
 
                 count[page]++;
             }
-            System.out.println("End: " + page);
             ending[page]++;
-
-            // Choose how to compute p (count vs endings)
-            p = ending;
-
-            // Normalization
-            for(int i = 0 ; i < numberOfDocs ; i++) {
-                p[i] /= (n + 1);
-            }
-
-            // It has converged
-            if(PageRank.converged(p, prevP, PageRank.EPSILON)) {
-                converged = true;
-                break;
-            }
         }
 
-        System.out.println("Converged: " + converged);
-        System.out.println();
+        // Normalization
+        for(int i = 0 ; i < numberOfDocs ; i++) {
+            p[i] = (double)(ending[i]) / (double)N;
+        }
 
-        // Sorting
+        // Sorting & displaying results
         ArrayIndexComparator comp = new ArrayIndexComparator(p);
         Integer[] idx = comp.createIndexArray();
         Arrays.sort(idx, comp);
 
-        for(int i = 1 ; i <= 10 ; i++) {
-            System.out.println(i + ": " + idx[numberOfDocs - i] + " " + p[idx[numberOfDocs - i]]);
+        for(int i = 1 ; i <= 25 ; i++) {
+            System.out.println(i + ": " + docName[idx[numberOfDocs - i]] + " " + p[idx[numberOfDocs - i]]);
         }
     }
 

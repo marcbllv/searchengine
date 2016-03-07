@@ -72,7 +72,7 @@ public class PageRank{
 
     public PageRank( String filename ) {
         int noOfDocs = readDocs( filename );
-        boolean montecarlo = true;
+        boolean montecarlo = false;
 
         if(montecarlo) {
             monteCarloPagerank(noOfDocs);

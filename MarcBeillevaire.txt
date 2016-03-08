@@ -21,7 +21,6 @@
 1 Hydrology 1
 1 UC_Davis_English_Department 0
 1 Evelyn_Silvia 1
-
 1 Math.f 0
 1 Elaine_Kasimatis.f 1
 1 ARC_Martial_Arts_Room.f 0

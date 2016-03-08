@@ -56,7 +56,7 @@
 1 Mentorships_for_Undergraduate_Research_in_Agriculture%2C_Letters%2C_and_Science.f 0
 1 EOP.f 0
 1 Social_Services.f 0
-1 Davis_Community_Church_Nursery_School.f    
+1 Davis_Community_Church_Nursery_School.f 0
 1 Agricultural_%26_Environmental_Chemistry_Graduate_Group.f 0
 1 GradLink.f 0
 1 Joanne_Moldenhauer.f 1
@@ -71,4 +71,3 @@
 1 SamSampson.f 0
 1 UC_Davis_Wrestling.f 0
 1 Planned_Education_Leave_Program.f 1
-1 Davis_Community_Meals.f 0

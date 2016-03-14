@@ -51,8 +51,9 @@ public class RankedQuery {
 
         for(int i = 0 ; i < lists.size() ; i++) {
             for(PostingsEntry pe : lists.get(i).list) {
-                tfidf = pe.tfidf(lists.get(i).size());
+                tfidf = pe.score_tfidf;
                 pe.score = tfidf;
+                System.out.println(tfidf);
 
                 if((w = sum.get(pe)) == null) {
                     sum.put(pe, tfidf);

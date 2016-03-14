@@ -344,6 +344,8 @@ public class SearchGUI extends JFrame {
     private void index() {
         synchronized ( indexLock ) {
             resultWindow.setText( "\n  Indexing, please wait..." );
+
+            // If no directory specified: try to recover index from files
             if(dirNames.size() == 0) {
                 // Recover the document names and the doc sizes
                 try {
@@ -365,6 +367,7 @@ public class SearchGUI extends JFrame {
                             System.out.println(doc[1]);
                     }
                     reader.close();
+
                 } catch(Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -375,6 +378,12 @@ public class SearchGUI extends JFrame {
                 File dokDir = new File( dirNames.get( i ));
                 indexer.processFiles( dokDir );
             }
+
+            // Computing tfidfs (quite fast)
+            HashedIndex.computeAllTfidf();
+
+            // Computing Monte Carlo PR
+
             resultWindow.setText( "\n  Done!" );
         }
     };

@@ -35,10 +35,6 @@ public class Indexer {
     /** The next docID to be generated. */
     private int lastDocID = 0;
 
-
-    /* ----------------------------------------------- */
-
-
     /** Generates a new document identifier as an integer. */
     private int generateDocID() {
 	return lastDocID++;

@@ -34,11 +34,10 @@ import java.nio.file.Files;
  */
 public class HashedIndex implements Index {
 
-    /** The index as a hashtable. */
     private boolean scanFiles = false;
 
-    /** How many words per file in case of saving the index on hard drive */
-    private static final int INDEX_SAVE_N_FILES = 1000;
+    /** How many files in case of saving the index on hard drive */
+    public static final int INDEX_SAVE_N_FILES = 1000;
 
     public int countDoc = 0;
 
@@ -79,6 +78,22 @@ public class HashedIndex implements Index {
      */
     public PostingsList getPostings( String token ) {
         return index.get(token);
+    }
+
+    /**
+     * Compute tfidf for all PostingsEntry in the index
+     */
+    public static void computeAllTfidf() {
+        int i = 0;
+        System.out.println("all tfidfs");
+        System.out.println("size: " + Index.index.size());
+        for(PostingsList pl: Index.index.values()) {
+            for(PostingsEntry pe: pl.list) {
+                pe.score_tfidf = pe.tfidf(pl.list.size());
+            }
+            i++;
+        }
+        System.out.println(i);
     }
 
     /**

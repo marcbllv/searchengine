@@ -15,6 +15,8 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     
     public int docID;
     public double score;
+    public double score_tfidf;
+    public double score_pagerank;
     public LinkedList<Integer> offsets;
 
     PostingsEntry() {
@@ -23,13 +25,11 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 
     PostingsEntry(int docID) {
         this.docID = docID;
-        this.score = 0;
         this.offsets = new LinkedList<Integer>();
     }
 
     PostingsEntry(int docID, double score) {
         this.docID = docID;
-        this.score = score;
         this.offsets = new LinkedList<Integer>();
     }
 
@@ -71,11 +71,11 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     }
 
     public double tfidf(int docCount) {
-        double tf = this.size();
+        int tf = this.size();
         double idf = Math.log( Index.docIDs.size() / docCount );
         double docLength = Index.docLengths.get(((Integer)this.docID).toString()); 
 
-        return tf * idf / Math.sqrt(docLength);
+        return tf * idf / docLength;
     }
 }
 

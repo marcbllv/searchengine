@@ -39,6 +39,8 @@ public class HashedIndex implements Index {
     /** How many files in case of saving the index on hard drive */
     public static final int INDEX_SAVE_N_FILES = 1000;
 
+    public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
+
     public int countDoc = 0;
 
     /**
@@ -85,15 +87,12 @@ public class HashedIndex implements Index {
      */
     public static void computeAllTfidf() {
         int i = 0;
-        System.out.println("all tfidfs");
-        System.out.println("size: " + Index.index.size());
         for(PostingsList pl: Index.index.values()) {
             for(PostingsEntry pe: pl.list) {
                 pe.score_tfidf = pe.tfidf(pl.list.size());
             }
             i++;
         }
-        System.out.println(i);
     }
 
     /**
@@ -125,18 +124,27 @@ public class HashedIndex implements Index {
 
                         for(int p = 0 ; p < docs.length ; p++) {
                             String[] doc = docs[p].split(":");
-                            String[] offsets = doc[1].split(",");
+                            String[] offsets = doc[2].split(",");
                             PostingsEntry pe = new PostingsEntry(Integer.parseInt(doc[0]));
 
                             for(int q = 0 ; q < offsets.length ; q++) {
                                 pe.offsets.add(Integer.parseInt(offsets[q]));
                             }
+                            pe.score_tfidf = Double.parseDouble(doc[1]);
                             pl.add(pe);
                         }
                         Index.index.put(word, pl);
                     }
                 }
 
+                reader.close();
+            }
+
+            // Recover the pageranks
+            reader = new BufferedReader(new FileReader("pagerank/__pageranks__"));
+            while((line = reader.readLine()) != null) {
+                String[] s = line.split("\\|");
+                HashedIndex.pageRanks.put(Integer.parseInt(s[0]), Double.parseDouble(s[1]));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -193,7 +201,9 @@ public class HashedIndex implements Index {
             f = new FileWriter("savedindex/__docnames__");
             writer = new PrintWriter(new BufferedWriter(f));
             for(Map.Entry<String, String> e : Index.docIDs.entrySet()) {
-                writer.println(e.getKey() + "|" + e.getValue());
+                writer.print(e.getKey());
+                writer.print("|");
+                writer.println(e.getValue());
             }
             writer.close();
 
@@ -201,11 +211,13 @@ public class HashedIndex implements Index {
             f = new FileWriter("savedindex/__doclengths__");
             writer = new PrintWriter(new BufferedWriter(f));
             for(Map.Entry<String, Integer> e : Index.docLengths.entrySet()) {
-                writer.println(e.getKey() + "|" + e.getValue());
+                writer.print(e.getKey());
+                writer.print("|");
+                writer.println(e.getValue());
             }
             writer.close();
 
-            // Saving postings lists
+            // Saving postings lists & scores
             for(Map.Entry<String, PostingsList> e : Index.index.entrySet()) {
                 String key = e.getKey();
                 PostingsList val = e.getValue();
@@ -220,6 +232,7 @@ public class HashedIndex implements Index {
                 for(int k = 0 ; k < s ; k++) {
                     pe = val.get(k);
                     writer.print(pe.docID + ":");
+                    writer.print(pe.score_tfidf + ":");
 
                     sOffsets = pe.size();
                     for(int j = 0 ; j < sOffsets ; j++) {

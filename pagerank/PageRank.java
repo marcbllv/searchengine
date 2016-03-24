@@ -72,7 +72,7 @@ public class PageRank{
 
     public PageRank( String filename ) {
         int noOfDocs = readDocs( filename );
-        boolean montecarlo = false;
+        boolean montecarlo = true;
 
         if(montecarlo) {
             monteCarloPagerank(noOfDocs);
@@ -267,14 +267,76 @@ public class PageRank{
             p[i] = (double)(count[i]) / (double)pageCount;
         }
 
-        // Sorting & displaying results
-        ArrayIndexComparator comp = new ArrayIndexComparator(p);
-        Integer[] idx = comp.createIndexArray();
-        Arrays.sort(idx, comp);
+        // Get names and save
+        try {
+            HashMap<String, Integer> docnames = new HashMap<String, Integer>();
+            BufferedReader reader = new BufferedReader(new FileReader("__docnames__"));
+            String line;
 
-        for(int i = 1 ; i <= 50 ; i++) {
-            System.out.println(i + ": " + docName[idx[numberOfDocs - i]] + " " + p[idx[numberOfDocs - i]]);
+            while((line = reader.readLine()) != null) {
+                String[] tokens = line.split("\\|");
+                docnames.put(tokens[1].substring(12, tokens[1].length() - 2), Integer.parseInt(tokens[0]));
+            }
+            reader.close();
+
+            HashMap<Integer, Integer> idxMatching = new HashMap<Integer, Integer>();
+            reader = new BufferedReader(new FileReader("articleTitles.txt"));
+
+            while((line = reader.readLine()) != null) {
+                String[] tokens = line.split(";");
+                idxMatching.put(Integer.parseInt(tokens[0]), docnames.get(tokens[1]));
+            }
+            reader.close();
+
+            PrintWriter w;
+
+            w = new PrintWriter(new BufferedWriter(new FileWriter("__pageranks__")));
+
+            for(int i = 0 ; i < numberOfDocs ; i++) {
+                Integer idx = idxMatching.get(Integer.parseInt(docName[i]));
+
+                if(idx != null) {
+                    w.print(idx);
+                    w.print("|");
+                    w.println(p[i]);
+                } 
+            }
+            w.close();
+        } catch(Exception e) {
+            System.out.println("error");
+            System.err.println(e.getMessage());
         }
+
+
+        // Sorting & displaying results
+        //ArrayIndexComparator comp = new ArrayIndexComparator(p);
+        //Integer[] idx = comp.createIndexArray();
+        //Arrays.sort(idx, comp);
+
+        //for(int i = 1 ; i <= 20 ; i++) {
+        //    System.out.println(i + ": " + docName[idx[numberOfDocs - i]] + " " + p[idx[numberOfDocs - i]]);
+        //}
+    }
+
+    private static int searchDocIdx(String name) {
+        String line;
+
+        try {
+            BufferedReader r = new BufferedReader(new FileReader("__docnames__"));
+
+            while((line = r.readLine()) != null) {
+                String[] tokens = line.split("\\|");
+                if(tokens[1].substring(12, tokens[1].length() - 2).equals(name)) {
+                    return Integer.parseInt(tokens[0]);
+                }
+            }
+
+            r.close();
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        return 0;
     }
 
     private static boolean converged(Double[] p1, Double[] p2, double epsilon) {

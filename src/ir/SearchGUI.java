@@ -11,6 +11,7 @@ package ir;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.InputStreamReader;
@@ -368,8 +369,57 @@ public class SearchGUI extends JFrame {
                     }
                     reader.close();
 
+                    // Recover the page ranks
+                    reader = new BufferedReader(new FileReader("pagerank/__pageranks__"));
+                    while((line = reader.readLine()) != null) {
+                        String[] s = line.split("\\|");
+                        HashedIndex.pageRanks.put(Integer.parseInt(s[0]), Double.parseDouble(s[1]));
+                    }
+
                 } catch(Exception e) {
                     System.out.println(e.getMessage());
+                }
+
+                // Recover the full index
+                FileReader f;
+                BufferedReader reader;
+                String line;
+
+                for(int i = 0 ; i < HashedIndex.INDEX_SAVE_N_FILES ; i++) {
+                    if(i % 10 == 0) {
+                        resultWindow.setText( "\n  Indexing, please wait...  " + (100.0 * i / HashedIndex.INDEX_SAVE_N_FILES) + "%" );
+                    }
+
+                    try {
+                        f = new FileReader("savedindex/" + i);
+
+                        if(f != null) {
+                            reader = new BufferedReader(f);
+
+                            while((line = reader.readLine()) != null) {
+                                String[] tokens = line.split("\\|");
+
+                                String[] docs = tokens[1].split(";");
+                                PostingsList pl = new PostingsList();
+
+                                for(int p = 0 ; p < docs.length ; p++) {
+                                    String[] doc = docs[p].split(":");
+                                    String[] offsets = doc[2].split(",");
+                                    PostingsEntry pe = new PostingsEntry(Integer.parseInt(doc[0]));
+
+                                    for(int q = 0 ; q < offsets.length ; q++) {
+                                        pe.offsets.add(Integer.parseInt(offsets[q]));
+                                    }
+                                    pe.score_tfidf = Double.parseDouble(doc[1]);
+                                    pl.add(pe);
+                                }
+                                Index.index.put(tokens[0], pl);
+                            }
+                        }
+                    } catch(FileNotFoundException e) {
+                    } catch(IOException e) {
+                        System.out.println("IO Error while reading saved index");
+                    }
                 }
             }
 
@@ -380,9 +430,7 @@ public class SearchGUI extends JFrame {
             }
 
             // Computing tfidfs (quite fast)
-            HashedIndex.computeAllTfidf();
-
-            // Computing Monte Carlo PR
+            // HashedIndex.computeAllTfidf();
 
             resultWindow.setText( "\n  Done!" );
         }

@@ -1,7 +1,9 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class RankedQuery {
 
@@ -12,7 +14,7 @@ public class RankedQuery {
      */
     public static PostingsList rankByScore(ArrayList<PostingsList> lists, int rankingType) {
 
-        HashMap<PostingsEntry, Double> docScores = null;
+        PostingsList docScores = null;
 
         // Get score for each doc
         switch(rankingType) {
@@ -27,72 +29,62 @@ public class RankedQuery {
         }
 
         // Sort PostingsEntries by score now:
-        PostingsList finalList = new PostingsList();
-        while(docScores.size() > 0) {
-            Double maxVal = 0.0;
-            PostingsEntry maxPe = new PostingsEntry();
+        Collections.sort(docScores.list);
 
-            for(HashMap.Entry<PostingsEntry, Double> e : docScores.entrySet()) {
-                if(e.getValue() > maxVal) {
-                    maxVal = e.getValue();
-                    maxPe  = e.getKey();
-                }
-            }
-
-            finalList.list.addFirst(maxPe);
-            docScores.remove(maxPe);
-        }
-
-        return finalList;
+        return docScores;
     }
 
-    private static HashMap<PostingsEntry, Double> tfidf(ArrayList<PostingsList> lists) {
-        HashMap<PostingsEntry, Double> sum    = new HashMap<PostingsEntry, Double>();
-        HashMap<PostingsEntry, Double> sum2   = new HashMap<PostingsEntry, Double>();
-        HashMap<PostingsEntry, Double> docScores = new HashMap<PostingsEntry, Double>();
+    private static PostingsList tfidf(ArrayList<PostingsList> lists) {
+        HashMap<Integer, Double> sum    = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> sum2   = new HashMap<Integer, Double>();
+        PostingsList docScores = new PostingsList();
         Double tfidf, w, w2;
 
+        // Computing cosine similarity with query
         for(int i = 0 ; i < lists.size() ; i++) {
             for(PostingsEntry pe : lists.get(i).list) {
-                tfidf = pe.score_tfidf;
-                pe.score = tfidf;
+                tfidf = pe.tfidf(lists.get(i).list.size());
 
-                if((w = sum.get(pe)) == null) {
-                    sum.put(pe, tfidf);
-                    sum2.put(pe, tfidf * tfidf);
+                if((w = sum.get(pe.docID)) == null) {
+                    sum.put(pe.docID, tfidf);
+                    sum2.put(pe.docID, tfidf * tfidf);
                 } else {
-                    w2 = sum2.get(pe);
-                    sum.put(pe, w + tfidf);
-                    sum2.put(pe, w2 + tfidf * tfidf);
+                    w2 = sum2.get(pe.docID);
+                    sum.put(pe.docID, w + tfidf);
+                    sum2.put(pe.docID, w2 + tfidf * tfidf);
                 }
             }
         }
 
-        for(HashMap.Entry<PostingsEntry, Double> e : sum.entrySet()) {
-            docScores.put(e.getKey(), e.getValue() / sum2.get(e.getKey()));
+        for(HashMap.Entry<Integer, Double> e : sum.entrySet()) {
+            PostingsEntry pe = new PostingsEntry();
+            pe.docID = e.getKey();
+            pe.score = e.getValue() / Math.sqrt(Index.index.size() * sum2.get(e.getKey()));
+            docScores.add(pe);
         }
 
         return docScores;
     }
 
-    private static HashMap<PostingsEntry, Double> pageRank(ArrayList<PostingsList> lists) {
-        HashMap<PostingsEntry, Double> pr = new HashMap<PostingsEntry, Double>();
+    private static PostingsList pageRank(ArrayList<PostingsList> lists) {
+        PostingsList pr = new PostingsList();
         for(PostingsList pl: lists) {
             for(PostingsEntry pe: pl.list) {
-                pe.score = HashedIndex.pageRanks.get(pe.docID);
-                pr.put(pe, pe.score);
+                try {
+                    pe.score = HashedIndex.pageRanks.get(pe.docID);
+                } catch (Exception e) {
+                    System.err.println("No page rank found for article " + pe.docID);
+                    pe.score = 0.0;
+                }
+                pr.add(pe);
             }
         }
-
-        System.out.println(pr.size());
 
         return pr;
     }
 
-    private static HashMap<PostingsEntry, Double> combination(ArrayList<PostingsList> lists, double a) {
-        HashMap<PostingsEntry, Double> pr = RankedQuery.pageRank(lists);
-        HashMap<PostingsEntry, Double> tfidf = RankedQuery.tfidf(lists);
-        HashMap<PostingsEntry, Double> comb = new HashMap<PostingsEntry, Double>();
+    private static PostingsList combination(ArrayList<PostingsList> lists, double a) {
+        PostingsList tfidf = RankedQuery.tfidf(lists);
 
         // Checking values for a
         // a = 0: full TFIDF
@@ -103,12 +95,13 @@ public class RankedQuery {
             a = 1;
         }
 
-        for(PostingsEntry pe: pr.keySet()) {
-            pe.score = a * tfidf.get(pe) + (1 - a) * pr.get(pe);
-            comb.put(pe, pe.score);
+        // Updating scores taking PR into account
+        Iterator<PostingsEntry> it = tfidf.list.iterator();
+        while(it.hasNext()) {
+            it.next().score = a * it.next().score + (1 - a) * HashedIndex.pageRanks.get(it.next().docID);
         }
 
-        return comb;
+        return tfidf;
     }
 
 }

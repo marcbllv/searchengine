@@ -71,11 +71,11 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     }
 
     public double tfidf(int docCount) {
-        int tf = this.size();
-        double idf = Math.log( Index.docIDs.size() / docCount );
         double docLength = Index.docLengths.get(((Integer)this.docID).toString()); 
+        double tf = this.size() / docLength;
+        double idf = Index.docIDs.size() / docCount;
 
-        return tf * idf / docLength;
+        return tf * Math.log(idf);
     }
 }
 

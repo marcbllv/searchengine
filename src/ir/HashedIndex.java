@@ -96,74 +96,11 @@ public class HashedIndex implements Index {
     }
 
     /**
-     * Recover the index from files saved from cleanup method
-     */
-    private void hardDriveIndexRecovery(Query query) {
-        File folder = new File("savedindex/");
-        File[] indexFiles = folder.listFiles();
-        Arrays.sort(indexFiles);
-
-        BufferedReader reader = null;
-        String line;
-
-        try {
-            // Recover the interesting posting lists
-            for(int i = 0 ; i < query.size() ; i++) {
-                String word = query.terms.get(i);
-                String file = ((Integer)Math.abs(word.hashCode() % INDEX_SAVE_N_FILES)).toString();
-
-                // load file k into the index
-                reader = new BufferedReader(new FileReader("savedindex/" + file));
-
-                while((line = reader.readLine()) != null) {
-                    String[] tokens = line.split("\\|");
-
-                    if(word.compareTo(tokens[0]) == 0) {
-                        String[] docs = tokens[1].split(";");
-                        PostingsList pl = new PostingsList();
-
-                        for(int p = 0 ; p < docs.length ; p++) {
-                            String[] doc = docs[p].split(":");
-                            String[] offsets = doc[2].split(",");
-                            PostingsEntry pe = new PostingsEntry(Integer.parseInt(doc[0]));
-
-                            for(int q = 0 ; q < offsets.length ; q++) {
-                                pe.offsets.add(Integer.parseInt(offsets[q]));
-                            }
-                            pe.score_tfidf = Double.parseDouble(doc[1]);
-                            pl.add(pe);
-                        }
-                        Index.index.put(word, pl);
-                    }
-                }
-
-                reader.close();
-            }
-
-            // Recover the pageranks
-            reader = new BufferedReader(new FileReader("pagerank/__pageranks__"));
-            while((line = reader.readLine()) != null) {
-                String[] s = line.split("\\|");
-                HashedIndex.pageRanks.put(Integer.parseInt(s[0]), Double.parseDouble(s[1]));
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-
-    }
-
-    /**
      *  Searches the index for postings matching the query.
      */
     public PostingsList search( Query query, int queryType, int rankingType, int structureType ) {
         ArrayList<PostingsList> responses = new ArrayList<PostingsList>(query.size());
 
-        // If files not scanned, we need to search in the savedindex
-        if(!this.scanFiles) {
-            this.hardDriveIndexRecovery(query);
-        }
-
-        // Then perform a normal query on the index
         responses = new ArrayList<PostingsList>(query.size());
         PostingsList l;
         for(int i = 0 ; i < query.size() ; i++) {

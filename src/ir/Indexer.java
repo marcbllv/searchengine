@@ -18,11 +18,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.LinkedList;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.pdfparser.*;
-import org.apache.pdfbox.util.PDFTextStripper;
-import org.apache.pdfbox.pdmodel.PDDocument;
-
 
 /**
  *   Processes a directory structure and indexes all PDF and text files.
@@ -84,23 +79,6 @@ public class Indexer {
 		    //  Read the first few bytes of the file to see if it is 
 		    // likely to be a PDF 
 		    Reader reader = new FileReader( f );
-		    char[] buf = new char[4];
-		    reader.read( buf, 0, 4 );
-            if ( buf[0] == '%' && buf[1]=='P' && buf[2]=='D' && buf[3]=='F' ) {
-                // We assume this is a PDF file
-                try {
-                    String contents = extractPDFContents( f );
-                    reader = new StringReader( contents );
-                }
-                catch ( IOException e ) {
-                    // Perhaps it wasn't a PDF file after all
-                    reader = new FileReader( f );
-                }
-            }
-            else {
-                // We hope this is ordinary text
-                reader = new FileReader( f );
-            }
 
 		    SimpleTokenizer tok = new SimpleTokenizer( reader );
 		    int offset = 0;
@@ -116,21 +94,6 @@ public class Indexer {
 		}
 	    }
 	}
-    }
-
-    /**
-     *  Extracts the textual contents from a PDF file as one long string.
-     */
-    public String extractPDFContents( File f ) throws IOException {
-	FileInputStream fi = new FileInputStream( f );
-	PDFParser parser = new PDFParser( fi );   
-	parser.parse();   
-	fi.close();
-	COSDocument cd = parser.getDocument();   
-	PDFTextStripper stripper = new PDFTextStripper();   
-	String result = stripper.getText( new PDDocument( cd ));  
-	cd.close();
-	return result;
     }
 
     /**

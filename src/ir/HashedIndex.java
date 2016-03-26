@@ -37,7 +37,7 @@ public class HashedIndex implements Index {
     private boolean scanFiles = false;
 
     /** How many files in case of saving the index on hard drive */
-    public static final int INDEX_SAVE_N_FILES = 1000;
+    public static final int INDEX_SAVE_N_FILES = 100;
 
     public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
 
@@ -86,13 +86,26 @@ public class HashedIndex implements Index {
      * Compute tfidf for all PostingsEntry in the index
      */
     public static void computeAllTfidf() {
-        int i = 0;
+        HashMap<Integer, Double> docNorms = new HashMap<Integer, Double>();
+        Double d;
+
         for(PostingsList pl: Index.index.values()) {
             for(PostingsEntry pe: pl.list) {
                 pe.score_tfidf = pe.tfidf(pl.list.size());
+
+                if((d = docNorms.get(pe.docID)) == null) {
+                    docNorms.put(pe.docID, pe.score_tfidf * pe.score_tfidf);
+                } else {
+                    docNorms.put(pe.docID, d + pe.score_tfidf * pe.score_tfidf);
+                }
             }
-            i++;
         }
+
+        for(Map.Entry<Integer, Double> e: docNorms.entrySet()) {
+            docNorms.put(e.getKey(), Math.sqrt(e.getValue()));
+        }
+
+        RankedQuery.docNorms = docNorms;
     }
 
     /**
@@ -169,7 +182,6 @@ public class HashedIndex implements Index {
                 for(int k = 0 ; k < s ; k++) {
                     pe = val.get(k);
                     writer.print(pe.docID + ":");
-                    writer.print(pe.score_tfidf + ":");
 
                     sOffsets = pe.size();
                     for(int j = 0 ; j < sOffsets ; j++) {

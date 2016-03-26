@@ -7,7 +7,10 @@ import java.util.Iterator;
 
 public class RankedQuery {
 
-    private static final double prVStfidf = 0.5;
+    // balancing PR and TFIDF. Choose 1.0 for PR only / 0.0 for tfidf only
+    private static final double prVStfidf = 0.95;
+
+    public static HashMap<Integer, Double> docNorms;
 
     /**
      * Returns a PostingsList of relevant articles ranked by score
@@ -36,9 +39,8 @@ public class RankedQuery {
 
     private static PostingsList tfidf(ArrayList<PostingsList> lists) {
         HashMap<Integer, Double> sum    = new HashMap<Integer, Double>();
-        HashMap<Integer, Double> sum2   = new HashMap<Integer, Double>();
         PostingsList docScores = new PostingsList();
-        Double tfidf, w, w2;
+        Double tfidf, w;
 
         // Computing cosine similarity with query
         for(int i = 0 ; i < lists.size() ; i++) {
@@ -47,11 +49,8 @@ public class RankedQuery {
 
                 if((w = sum.get(pe.docID)) == null) {
                     sum.put(pe.docID, tfidf);
-                    sum2.put(pe.docID, tfidf * tfidf);
                 } else {
-                    w2 = sum2.get(pe.docID);
                     sum.put(pe.docID, w + tfidf);
-                    sum2.put(pe.docID, w2 + tfidf * tfidf);
                 }
             }
         }
@@ -59,7 +58,7 @@ public class RankedQuery {
         for(HashMap.Entry<Integer, Double> e : sum.entrySet()) {
             PostingsEntry pe = new PostingsEntry();
             pe.docID = e.getKey();
-            pe.score = e.getValue() / Math.sqrt(Index.index.size() * sum2.get(e.getKey()));
+            pe.score = e.getValue() / (Math.sqrt(lists.size()) * RankedQuery.docNorms.get(pe.docID));
             docScores.add(pe);
         }
 
@@ -87,8 +86,6 @@ public class RankedQuery {
         PostingsList tfidf = RankedQuery.tfidf(lists);
 
         // Checking values for a
-        // a = 0: full TFIDF
-        // a = 1: full pagerank
         if(a < 0) {
             a = 0;
         } else if(a > 1) {
@@ -98,7 +95,7 @@ public class RankedQuery {
         // Updating scores taking PR into account
         Iterator<PostingsEntry> it = tfidf.list.iterator();
         while(it.hasNext()) {
-            it.next().score = a * it.next().score + (1 - a) * HashedIndex.pageRanks.get(it.next().docID);
+            it.next().score = (1 - a) * it.next().score + a * HashedIndex.pageRanks.get(it.next().docID);
         }
 
         return tfidf;

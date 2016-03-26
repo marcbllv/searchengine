@@ -16,7 +16,6 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     public int docID;
     public double score;
     public double score_tfidf;
-    public double score_pagerank;
     public LinkedList<Integer> offsets;
 
     PostingsEntry() {

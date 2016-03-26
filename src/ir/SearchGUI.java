@@ -404,13 +404,12 @@ public class SearchGUI extends JFrame {
 
                                 for(int p = 0 ; p < docs.length ; p++) {
                                     String[] doc = docs[p].split(":");
-                                    String[] offsets = doc[2].split(",");
+                                    String[] offsets = doc[1].split(",");
                                     PostingsEntry pe = new PostingsEntry(Integer.parseInt(doc[0]));
 
                                     for(int q = 0 ; q < offsets.length ; q++) {
                                         pe.offsets.add(Integer.parseInt(offsets[q]));
                                     }
-                                    pe.score_tfidf = Double.parseDouble(doc[1]);
                                     pl.add(pe);
                                 }
                                 Index.index.put(tokens[0], pl);
@@ -421,16 +420,15 @@ public class SearchGUI extends JFrame {
                         System.out.println("IO Error while reading saved index");
                     }
                 }
-            }
-
-
-            for ( int i=0; i<dirNames.size(); i++ ) {
-                File dokDir = new File( dirNames.get( i ));
-                indexer.processFiles( dokDir );
+            } else {
+                for ( int i=0; i<dirNames.size(); i++ ) {
+                    File dokDir = new File( dirNames.get( i ));
+                    indexer.processFiles( dokDir );
+                }
             }
 
             // Computing tfidfs (quite fast)
-            // HashedIndex.computeAllTfidf();
+            HashedIndex.computeAllTfidf();
 
             resultWindow.setText( "\n  Done!" );
         }

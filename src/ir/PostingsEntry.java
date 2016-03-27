@@ -10,12 +10,14 @@ package ir;
 
 import java.io.Serializable;
 import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     
     public int docID;
     public double score;
     public double score_tfidf;
+    public double[] tfidf_vect;
     public LinkedList<Integer> offsets;
 
     PostingsEntry() {

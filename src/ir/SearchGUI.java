@@ -427,7 +427,7 @@ public class SearchGUI extends JFrame {
                 }
             }
 
-            // Computing tfidfs (quite fast)
+            // Computing tfidfs
             HashedIndex.computeAllTfidf();
 
             resultWindow.setText( "\n  Done!" );

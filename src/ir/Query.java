@@ -8,9 +8,14 @@
 package ir;
 
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.Iterator;
 
 public class Query {
+
+    public static final double alpha = 1.0;
+    public static final double beta  = 0.8;
     
     public LinkedList<String> terms = new LinkedList<String>();
     public LinkedList<Double> weights = new LinkedList<Double>();
@@ -53,12 +58,25 @@ public class Query {
      *  Expands the Query using Relevance Feedback
      */
     public void relevanceFeedback( PostingsList results, boolean[] docIsRelevant, Indexer indexer ) {
-	// results contain the ranked list from the current search
-	// docIsRelevant contains the users feedback on which of the 10 first hits are relevant
-	
-	//
-	//  YOUR CODE HERE
-	//
+        ArrayList<Double> relevantSum = new ArrayList<Double>(this.size());
+        Double s;
+        int relevantCount = 0;
+
+        for(int i = 0 ; i < 10 ; i++) {
+            relevantCount += docIsRelevant[i] ? 1 : 0;
+        }
+
+        for(int i = 0 ; i < 10 ; i++) {
+            if(results.get(i) == null) {
+                break; // less than 10 results
+            }
+
+            if(docIsRelevant[i]) {
+                for(int j = 0 ; j < this.size() ; j++) {
+                    this.weights.set(j, Query.alpha * this.weights.get(j) + Query.beta * results.get(i).tfidf_vect[j] / relevantCount);
+                }
+            }
+        }
     }
 }
 

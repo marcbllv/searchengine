@@ -15,20 +15,20 @@ public class RankedQuery {
     /**
      * Returns a PostingsList of relevant articles ranked by score
      */
-    public static PostingsList rankByScore(ArrayList<PostingsList> lists, int rankingType) {
+    public static PostingsList rankByScore(Query query, ArrayList<PostingsList> lists, int rankingType) {
 
         PostingsList docScores = null;
 
         // Get score for each doc
         switch(rankingType) {
             case Index.TF_IDF:
-                docScores = RankedQuery.tfidf(lists);
+                docScores = RankedQuery.tfidf(query, lists);
                 break;
             case Index.PAGERANK:
                 docScores = RankedQuery.pageRank(lists);
                 break;
             case Index.COMBINATION:
-                docScores = RankedQuery.combination(lists, prVStfidf);
+                docScores = RankedQuery.combination(query, lists, prVStfidf);
         }
 
         // Sort PostingsEntries by score now:
@@ -37,29 +37,35 @@ public class RankedQuery {
         return docScores;
     }
 
-    private static PostingsList tfidf(ArrayList<PostingsList> lists) {
-        HashMap<Integer, Double> sum    = new HashMap<Integer, Double>();
+    private static PostingsList tfidf(Query query, ArrayList<PostingsList> lists) {
+        HashMap<Integer, PostingsEntry> sum = new HashMap<Integer, PostingsEntry>();
         PostingsList docScores = new PostingsList();
-        Double tfidf, w;
+        Double tfidf;
+        PostingsEntry p;
 
-        // Computing cosine similarity with query
+        // Computing cosine similarity with respect to query terms weights
         for(int i = 0 ; i < lists.size() ; i++) {
             for(PostingsEntry pe : lists.get(i).list) {
                 tfidf = pe.tfidf(lists.get(i).list.size());
 
-                if((w = sum.get(pe.docID)) == null) {
-                    sum.put(pe.docID, tfidf);
+                if((p = sum.get(pe.docID)) == null) {
+                    p = new PostingsEntry();
+                    p.docID = pe.docID;
+                    p.tfidf_vect = new double[query.size()];
+                    p.tfidf_vect[i] = tfidf;
+
+                    p.score += tfidf * query.weights.get(i);
+
+                    sum.put(pe.docID, p);
                 } else {
-                    sum.put(pe.docID, w + tfidf);
+                    p.tfidf_vect[i] = tfidf;
                 }
             }
         }
 
-        for(HashMap.Entry<Integer, Double> e : sum.entrySet()) {
-            PostingsEntry pe = new PostingsEntry();
-            pe.docID = e.getKey();
-            pe.score = e.getValue() / (Math.sqrt(lists.size()) * RankedQuery.docNorms.get(pe.docID));
-            docScores.add(pe);
+        for(HashMap.Entry<Integer, PostingsEntry> e : sum.entrySet()) {
+            e.getValue().score = e.getValue().score / (Math.sqrt(lists.size()) * RankedQuery.docNorms.get(e.getValue().docID));
+            docScores.add(e.getValue());
         }
 
         return docScores;
@@ -82,8 +88,8 @@ public class RankedQuery {
         return pr;
     }
 
-    private static PostingsList combination(ArrayList<PostingsList> lists, double a) {
-        PostingsList tfidf = RankedQuery.tfidf(lists);
+    private static PostingsList combination(Query query, ArrayList<PostingsList> lists, double a) {
+        PostingsList tfidf = RankedQuery.tfidf(query, lists);
 
         // Checking values for a
         if(a < 0) {

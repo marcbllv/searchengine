@@ -37,7 +37,7 @@ public class HashedIndex implements Index {
     private boolean scanFiles = false;
 
     /** How many files in case of saving the index on hard drive */
-    public static final int INDEX_SAVE_N_FILES = 100;
+    public static final int INDEX_SAVE_N_FILES = 1000;
 
     public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
 
@@ -128,7 +128,7 @@ public class HashedIndex implements Index {
             case Index.PHRASE_QUERY:
                 return IntersectionQuery.intersectResponses(responses, queryType);
             case Index.RANKED_QUERY:
-                return RankedQuery.rankByScore(responses, rankingType);
+                return RankedQuery.rankByScore(query, responses, rankingType);
         }
 
         return null;

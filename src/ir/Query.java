@@ -11,10 +11,11 @@ import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.Iterator;
+import java.util.Map;
 
 public class Query {
 
-    public static final double alpha = 1.0;
+    public static final double alpha = 0.0;
     public static final double beta  = 0.8;
     
     public LinkedList<String> terms = new LinkedList<String>();
@@ -48,12 +49,25 @@ public class Query {
      *  Returns a shallow copy of the Query
      */
     public Query copy() {
-	Query queryCopy = new Query();
-	queryCopy.terms = (LinkedList<String>) terms.clone();
-	queryCopy.weights = (LinkedList<Double>) weights.clone();
-	return queryCopy;
+        Query queryCopy = new Query();
+        queryCopy.terms = (LinkedList<String>) terms.clone();
+        queryCopy.weights = (LinkedList<Double>) weights.clone();
+        return queryCopy;
     }
-    
+
+    /**
+     * Normalize weights vector to 1
+     */
+    public void normalize() {
+        double norm = .0;
+        for(Double d: this.weights) {
+            norm += d * d;
+        }
+        for(Double d: this.weights) {
+            d = d / norm;
+        }
+    }
+
     /**
      *  Expands the Query using Relevance Feedback
      */
@@ -61,6 +75,12 @@ public class Query {
         ArrayList<Double> relevantSum = new ArrayList<Double>(this.size());
         Double s;
         int relevantCount = 0;
+
+        // Normalizing query & multiplication by alpha:
+        this.normalize();
+        for(Double d: this.weights) {
+            d = d * alpha;
+        }
 
         for(int i = 0 ; i < 10 ; i++) {
             relevantCount += docIsRelevant[i] ? 1 : 0;
@@ -71,11 +91,69 @@ public class Query {
                 break; // less than 10 results
             }
 
+            Query docVect = this.copy();
+
             if(docIsRelevant[i]) {
-                for(int j = 0 ; j < this.size() ; j++) {
-                    this.weights.set(j, Query.alpha * this.weights.get(j) + Query.beta * results.get(i).tfidf_vect[j] / relevantCount);
+                System.out.println("Doc " + results.get(i).docID + " is relevant!");
+                int docID = results.get(i).docID;
+
+                // Reseting new docVector
+                for(Double w: docVect.weights) {
+                    w = 0.0;
+                }
+
+                // Looping through index to build document vector
+                for(Map.Entry<String, PostingsList> w: Index.index.entrySet()) {
+                    for(PostingsEntry pe: w.getValue().list) {
+                        if(pe.docID == docID) {
+                            if(docVect.terms.contains(w.getKey())) {
+                                Iterator<String> dvT = docVect.terms.iterator();
+                                Iterator<Double> dvW = docVect.weights.iterator();
+                                while(dvT.hasNext()) {
+                                    if(dvT.next().equals(w.getKey())) {
+                                        Double d = dvW.next();
+                                        d = pe.score_tfidf;
+                                    }
+                                }
+                            } else {
+                                docVect.terms.add(w.getKey());
+                                docVect.weights.add(pe.score_tfidf);
+                                this.terms.add(w.getKey());
+                                this.weights.add(0.0);
+                            }
+                        } else if(pe.docID > docID) {
+                            break;
+                        }
+                    }
+                }
+
+                System.out.println("Here is the doc vector:");
+                Iterator<String> dvT = docVect.terms.iterator();
+                Iterator<Double> dvW = docVect.weights.iterator();
+                while(dvT.hasNext()) {
+                    System.out.println(dvW.next() + "    " + dvT.next());
+                }
+
+                // Normalizing docVect:
+                docVect.normalize();
+
+                // Adding to previous query:
+                Iterator<Double> docWeights = docVect.weights.iterator();
+                Iterator<Double> queryWeights  = this.weights.iterator();
+                while(queryWeights.hasNext()) {
+                    Double d = queryWeights.next();
+                    System.out.print(d + " ");
+                    d = new Double(d + Query.beta * docWeights.next() / relevantCount);
+                    System.out.println(d);
                 }
             }
+        }
+
+        System.out.println("Final query, " + this.terms.size() + " elements:");
+        Iterator<String> queryTerms = this.terms.iterator();
+        Iterator<Double> queryWeights  = this.weights.iterator();
+        while(queryTerms.hasNext()) {
+            System.out.println(queryWeights.next() + "    " + queryTerms.next());
         }
     }
 }

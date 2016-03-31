@@ -43,6 +43,8 @@ public class RankedQuery {
         Double tfidf;
         PostingsEntry p;
 
+        query.print();
+
         // Computing cosine similarity with respect to query terms weights
         for(int i = 0 ; i < lists.size() ; i++) {
             for(PostingsEntry pe : lists.get(i).list) {

@@ -10,13 +10,14 @@ package ir;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.ListIterator;
 import java.util.Iterator;
 import java.util.Map;
 
 public class Query {
 
-    public static final double alpha = 0.0;
-    public static final double beta  = 0.8;
+    public static final double alpha = 0.3;
+    public static final double beta  = 1.8;
     
     public LinkedList<String> terms = new LinkedList<String>();
     public LinkedList<Double> weights = new LinkedList<Double>();
@@ -31,11 +32,26 @@ public class Query {
      *  Creates a new Query from a string of words
      */
     public Query( String queryString  ) {
-	StringTokenizer tok = new StringTokenizer( queryString );
-	while ( tok.hasMoreTokens() ) {
-	    terms.add( tok.nextToken() );
-	    weights.add( new Double(1) );
-	}    
+        StringTokenizer tok = new StringTokenizer( queryString );
+        while ( tok.hasMoreTokens() ) {
+            terms.add( tok.nextToken() );
+            weights.add( new Double(1) );
+        }    
+    }
+
+    /**
+     * Print terms and weights
+     */
+    public void print() {
+        ListIterator<String> itTerms = this.terms.listIterator();
+        ListIterator<Double> itWeigh = this.weights.listIterator();
+
+        System.out.println();
+        System.out.println("Current query:");
+        while(itTerms.hasNext()) {
+            System.out.println(itWeigh.next() + "   " + itTerms.next());
+        }
+        System.out.println();
     }
     
     /**
@@ -63,8 +79,9 @@ public class Query {
         for(Double d: this.weights) {
             norm += d * d;
         }
-        for(Double d: this.weights) {
-            d = d / norm;
+        norm = Math.sqrt(norm);
+        for(ListIterator<Double> it = this.weights.listIterator() ; it.hasNext() ; ) {
+            it.set(it.next() / norm);
         }
     }
 
@@ -129,22 +146,21 @@ public class Query {
 
                 System.out.println("Here is the doc vector:");
                 Iterator<String> dvT = docVect.terms.iterator();
+                Iterator<String> qT = this.terms.iterator();
                 Iterator<Double> dvW = docVect.weights.iterator();
                 while(dvT.hasNext()) {
-                    System.out.println(dvW.next() + "    " + dvT.next());
+                    System.out.println(qT.next() + "    " + dvT.next());
                 }
 
                 // Normalizing docVect:
                 docVect.normalize();
 
                 // Adding to previous query:
-                Iterator<Double> docWeights = docVect.weights.iterator();
-                Iterator<Double> queryWeights  = this.weights.iterator();
+                ListIterator<Double> docWeights = docVect.weights.listIterator();
+                ListIterator<Double> queryWeights  = this.weights.listIterator();
                 while(queryWeights.hasNext()) {
-                    Double d = queryWeights.next();
-                    System.out.print(d + " ");
-                    d = new Double(d + Query.beta * docWeights.next() / relevantCount);
-                    System.out.println(d);
+                    double d = queryWeights.next();
+                    queryWeights.set(d + Query.beta * docWeights.next() / relevantCount);
                 }
             }
         }

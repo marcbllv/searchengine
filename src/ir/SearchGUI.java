@@ -172,6 +172,7 @@ public class SearchGUI extends JFrame {
                 // Normalize the search string and turn it into a Query
                 String queryString = SimpleTokenizer.normalize( queryWindow.getText() );
                 query = new Query( queryString );
+                query.normalize();
                 // Search and print results. Access to the index is synchronized since
                 // we don't want to search at the same time we're indexing new files
                 // (this might corrupt the index).

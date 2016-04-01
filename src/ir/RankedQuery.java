@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 public class RankedQuery {
 
     // balancing PR and TFIDF. Choose 1.0 for PR only / 0.0 for tfidf only
     private static final double prVStfidf = 0.95;
+
+    public static final boolean CHAMPIONS_LIST = false;
 
     public static HashMap<Integer, Double> docNorms;
 
@@ -42,13 +45,22 @@ public class RankedQuery {
         PostingsList docScores = new PostingsList();
         Double tfidf;
         PostingsEntry p;
+        List<PostingsEntry> l = null;
 
         query.print();
 
-        // Computing cosine similarity with respect to query terms weights
+        // Computing cosine similarity from the query terms weights
         for(int i = 0 ; i < lists.size() ; i++) {
-            for(PostingsEntry pe : lists.get(i).list) {
-                tfidf = pe.tfidf(lists.get(i).list.size());
+
+            // Champions list or full list:
+            if(RankedQuery.CHAMPIONS_LIST) {
+                l = lists.get(i).championsList;
+            } else {
+                l = lists.get(i).list;
+            }
+
+            for(PostingsEntry pe : l) {
+                tfidf = pe.score_tfidf;
 
                 if((p = sum.get(pe.docID)) == null) {
                     p = new PostingsEntry();
@@ -103,7 +115,8 @@ public class RankedQuery {
         // Updating scores taking PR into account
         Iterator<PostingsEntry> it = tfidf.list.iterator();
         while(it.hasNext()) {
-            it.next().score = (1 - a) * it.next().score + a * HashedIndex.pageRanks.get(it.next().docID);
+            PostingsEntry pe = it.next();
+            it.next().score = (1 - a) * pe.score + a * HashedIndex.pageRanks.get(pe.docID);
         }
 
         return tfidf;

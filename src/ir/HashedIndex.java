@@ -40,7 +40,7 @@ public class HashedIndex implements Index {
     public static final int INDEX_SAVE_N_FILES = 1000;
 
     /** How many elements in champions lists */
-    public static final int CHAMP_LIST_SIZE = 50;
+    public static final int CHAMP_LIST_SIZE = 100;
 
     public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
 
@@ -115,7 +115,9 @@ public class HashedIndex implements Index {
      *  Searches the index for postings matching the query.
      */
     public PostingsList search( Query query, int queryType, int rankingType, int structureType ) {
+        long t1 = System.nanoTime();
         ArrayList<PostingsList> responses = new ArrayList<PostingsList>(query.size());
+        PostingsList resp = null;
 
         responses = new ArrayList<PostingsList>(query.size());
         PostingsList l;
@@ -129,12 +131,15 @@ public class HashedIndex implements Index {
         switch(queryType) {
             case Index.INTERSECTION_QUERY:
             case Index.PHRASE_QUERY:
-                return IntersectionQuery.intersectResponses(responses, queryType);
+                resp =  IntersectionQuery.intersectResponses(responses, queryType);
+                break;
             case Index.RANKED_QUERY:
-                return RankedQuery.rankByScore(query, responses, rankingType);
+                resp =  RankedQuery.rankByScore(query, responses, rankingType);
         }
 
-        return null;
+        System.out.println("Qsize: " + query.size() + " / Processing time: " + (System.nanoTime() - t1) + " ns");
+
+        return resp;
     }
 
     public static void computeChampionsLists() {

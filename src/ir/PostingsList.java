@@ -9,6 +9,7 @@
 package ir;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.io.Serializable;
 import java.util.Collections;
@@ -22,7 +23,7 @@ public class PostingsList implements Serializable {
     
     /** The postings list as a linked list. */
     public LinkedList<PostingsEntry> list;
-    public LinkedList<PostingsEntry> championsList;
+    public List<PostingsEntry> championsList;
 
     PostingsList() {
         this.list = new LinkedList<PostingsEntry>();
@@ -91,11 +92,13 @@ public class PostingsList implements Serializable {
         this.championsList = new LinkedList<PostingsEntry>(this.list);
         Collections.sort(this.championsList, new Comparator<PostingsEntry>() {
             public int compare(PostingsEntry p1, PostingsEntry p2) {
-                return Double.compare(p1.score_tfidf, p2.score_tfidf);
+                return p1.offsets.size() - p2.offsets.size();
             }
         });
 
-        this.championsList = (LinkedList<PostingsEntry>)this.championsList.subList(0, HashedIndex.CHAMP_LIST_SIZE);
+        int size = (HashedIndex.CHAMP_LIST_SIZE < this.championsList.size() ? HashedIndex.CHAMP_LIST_SIZE : this.championsList.size());
+
+        this.championsList = this.championsList.subList(0, size);
     }
 
     public void add(PostingsEntry e) {

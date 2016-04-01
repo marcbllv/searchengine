@@ -1,8 +1,26 @@
+Assume we have: a set of documents indexed, a search engine with relevance
+feedback.  
+
+The protocol from the user perspective is the following:
 - A user enters a query
-- on the results list, he picks the relevant documents
-- we compute the precision VS #results graph
-- we compute the precision-recall graph for these results
-- we use relevant feedback with the relevant documents
-- we compute the precision VS #results graph again
-- we compute the precision-recall graph again
+- on the results list, he picks the relevant documents 
+- the relevance feedback is performed and new documents are returned by the
+search engine
+- the user select again relevant documents among the new returned list
+
+After both the first and the second relevance evaluation by the user, we
+compute several indicators to measure the efficiency of our search engine:
+
+- The precision at 10 / 20 / 30 / 40 / 50
+- The recall at 10 / 20 / 30 / 40 / 50
+- The precision-recall curve from 1 to 50
+
+We hope that the precision for the first results (10 / 20 at least) increased
+on the relevance feedback results, meaning less unrelevant documents are
+listed on top.
+In the same way, we would like to increase the recall.
+
+We can also plot the precision-recall curves, and check which curve is above
+the other. The higher the precision-recall curve is, the better, especially
+for low recall, as the top 10 results is often the only results users look at.
 

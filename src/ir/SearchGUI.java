@@ -429,7 +429,12 @@ public class SearchGUI extends JFrame {
             }
 
             // Computing tfidfs
+            resultWindow.setText( "\n  Computing tfidfs..." );
             HashedIndex.computeAllTfidf();
+
+            // Computing champions lists
+            resultWindow.setText( "\n  Computing champions lists..." );
+            HashedIndex.computeChampionsLists();
 
             resultWindow.setText( "\n  Done!" );
         }

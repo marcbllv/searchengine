@@ -39,6 +39,9 @@ public class HashedIndex implements Index {
     /** How many files in case of saving the index on hard drive */
     public static final int INDEX_SAVE_N_FILES = 1000;
 
+    /** How many elements in champions lists */
+    public static final int CHAMP_LIST_SIZE = 50;
+
     public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
 
     public int countDoc = 0;
@@ -132,6 +135,13 @@ public class HashedIndex implements Index {
         }
 
         return null;
+    }
+
+    public static void computeChampionsLists() {
+        // Compute champions lists for all postingsList in the index
+        for(PostingsList pl: Index.index.values()) {
+            pl.computeChampionsList();
+        }
     }
 
     public void cleanup() {

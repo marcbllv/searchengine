@@ -34,6 +34,17 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         this.offsets = new LinkedList<Integer>();
     }
 
+    public PostingsEntry clone() {
+        PostingsEntry pe = new PostingsEntry();
+        pe.docID = this.docID;
+        pe.score = this.score;
+        pe.score_tfidf = this.score_tfidf;
+        pe.tfidf_vect = this.tfidf_vect; // Shallow copy for tfidf_vect
+        pe.offsets = this.offsets; // Shallow copy for offsets, its okay
+
+        return pe;
+    }
+
     /**
      *  PostingsEntries are compared by their score (only relevant 
      *  in ranked retrieval).

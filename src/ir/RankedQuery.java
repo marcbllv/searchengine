@@ -66,11 +66,7 @@ public class RankedQuery {
                 if((p = sum.get(pe.docID)) == null) {
                     p = new PostingsEntry();
                     p.docID = pe.docID;
-                    //p.tfidf_vect = new double[query.size()];
-                    //p.tfidf_vect[i] = tfidf;
-
                     p.score = tfidf * query.weights.get(i);
-
                     sum.put(pe.docID, p);
                 } else {
                     p.score += tfidf * query.weights.get(i);

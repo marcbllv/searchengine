@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 public class RankedQuery {
 
     // balancing PR and TFIDF. Choose 1.0 for PR only / 0.0 for tfidf only
     private static final double prVStfidf = 0.95;
 
-    public static final boolean CHAMPIONS_LIST = false;
+    public static final boolean CHAMPIONS_LIST = true;
 
     public static HashMap<Integer, Double> docNorms;
 
@@ -65,14 +66,14 @@ public class RankedQuery {
                 if((p = sum.get(pe.docID)) == null) {
                     p = new PostingsEntry();
                     p.docID = pe.docID;
-                    p.tfidf_vect = new double[query.size()];
-                    p.tfidf_vect[i] = tfidf;
+                    //p.tfidf_vect = new double[query.size()];
+                    //p.tfidf_vect[i] = tfidf;
 
-                    p.score += tfidf * query.weights.get(i);
+                    p.score = tfidf * query.weights.get(i);
 
                     sum.put(pe.docID, p);
                 } else {
-                    p.tfidf_vect[i] = tfidf;
+                    p.score += tfidf * query.weights.get(i);
                 }
             }
         }
@@ -113,10 +114,10 @@ public class RankedQuery {
         }
 
         // Updating scores taking PR into account
-        Iterator<PostingsEntry> it = tfidf.list.iterator();
+        ListIterator<PostingsEntry> it = tfidf.list.listIterator();
         while(it.hasNext()) {
             PostingsEntry pe = it.next();
-            it.next().score = (1 - a) * pe.score + a * HashedIndex.pageRanks.get(pe.docID);
+            pe.score = (1 - a) * pe.score + a * HashedIndex.pageRanks.get(pe.docID);
         }
 
         return tfidf;

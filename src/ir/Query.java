@@ -16,8 +16,8 @@ import java.util.Map;
 
 public class Query {
 
-    public static final double alpha = 0.3;
-    public static final double beta  = 1.8;
+    public static final double alpha = 1.0;
+    public static final double beta  = 1.0;
     
     public LinkedList<String> terms = new LinkedList<String>();
     public LinkedList<Double> weights = new LinkedList<Double>();
@@ -95,9 +95,12 @@ public class Query {
 
         // Normalizing query & multiplication by alpha:
         this.normalize();
-        for(Double d: this.weights) {
-            d = d * alpha;
+        ListIterator<Double> qW = this.weights.listIterator();
+        while(qW.hasNext()) {
+            qW.set(Query.alpha * qW.next());
         }
+
+        this.print();
 
         for(int i = 0 ; i < 10 ; i++) {
             relevantCount += docIsRelevant[i] ? 1 : 0;
@@ -115,8 +118,10 @@ public class Query {
                 int docID = results.get(i).docID;
 
                 // Reseting new docVector
-                for(Double w: docVect.weights) {
-                    w = 0.0;
+                ListIterator<Double> dvWeights = docVect.weights.listIterator();
+                while(dvWeights.hasNext()) {
+                    dvWeights.next();
+                    dvWeights.set(0.0);
                 }
 
                 // Looping through index to build document vector
@@ -125,11 +130,12 @@ public class Query {
                         if(pe.docID == docID) {
                             if(docVect.terms.contains(w.getKey())) {
                                 Iterator<String> dvT = docVect.terms.iterator();
-                                Iterator<Double> dvW = docVect.weights.iterator();
+                                ListIterator<Double> dvW = docVect.weights.listIterator();
                                 while(dvT.hasNext()) {
+                                    dvW.next();
                                     if(dvT.next().equals(w.getKey())) {
-                                        Double d = dvW.next();
-                                        d = pe.score_tfidf;
+                                        dvW.set(pe.score_tfidf);
+                                        break;
                                     }
                                 }
                             } else {
@@ -144,16 +150,15 @@ public class Query {
                     }
                 }
 
-                System.out.println("Here is the doc vector:");
-                Iterator<String> dvT = docVect.terms.iterator();
-                Iterator<String> qT = this.terms.iterator();
-                Iterator<Double> dvW = docVect.weights.iterator();
-                while(dvT.hasNext()) {
-                    System.out.println(qT.next() + "    " + dvT.next());
-                }
-
                 // Normalizing docVect:
                 docVect.normalize();
+
+                System.out.println("Here is the doc vector:");
+                Iterator<String> dvT = docVect.terms.iterator();
+                Iterator<Double> dvW = docVect.weights.iterator();
+                while(dvT.hasNext()) {
+                    System.out.println(dvW.next() + "    " + dvT.next());
+                }
 
                 // Adding to previous query:
                 ListIterator<Double> docWeights = docVect.weights.listIterator();

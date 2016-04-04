@@ -92,7 +92,7 @@ public class PostingsList implements Serializable {
         this.championsList = new LinkedList<PostingsEntry>(this.list);
         Collections.sort(this.championsList, new Comparator<PostingsEntry>() {
             public int compare(PostingsEntry p1, PostingsEntry p2) {
-                return p1.offsets.size() - p2.offsets.size();
+                return p2.offsets.size() - p1.offsets.size(); // Opposite as std comparator to sort in descending order
             }
         });
 

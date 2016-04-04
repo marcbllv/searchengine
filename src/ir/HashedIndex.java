@@ -40,7 +40,7 @@ public class HashedIndex implements Index {
     public static final int INDEX_SAVE_N_FILES = 1000;
 
     /** How many elements in champions lists */
-    public static final int CHAMP_LIST_SIZE = 100;
+    public static final int CHAMP_LIST_SIZE = 200;
 
     public static HashMap<Integer, Double> pageRanks = new HashMap<Integer, Double>();
 
